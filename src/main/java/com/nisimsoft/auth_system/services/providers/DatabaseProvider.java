@@ -9,19 +9,19 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class DatabaseProvider implements AuthenticationProvider {
 
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+  private final UserRepository userRepository;
+  private final PasswordEncoder passwordEncoder;
 
-    @Override
-    public boolean authenticate(String email, String password) {
-        return userRepository
-                .findByEmail(email)
-                .map(user -> passwordEncoder.matches(password, user.getPassword()))
-                .orElse(false);
-    }
+  @Override
+  public boolean authenticate(String email, String password) {
+    return userRepository
+        .findByEmail(email)
+        .map(user -> passwordEncoder.matches(password, user.getPassword()))
+        .orElse(false);
+  }
 
-    @Override
-    public String getProviderName() {
-        return "database";
-    }
+  @Override
+  public String getProviderName() {
+    return "database";
+  }
 }

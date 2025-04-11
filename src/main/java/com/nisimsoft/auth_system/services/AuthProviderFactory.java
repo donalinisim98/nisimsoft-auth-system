@@ -9,17 +9,18 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class AuthProviderFactory {
-    private final Map<String, AuthenticationProvider> providers;
+  private final Map<String, AuthenticationProvider> providers;
 
-    public AuthProviderFactory(List<AuthenticationProvider> providerList) {
-        // Mapea cada proveedor por su nombre (clave: nombre del proveedor, valor:
-        // instancia)
-        providers = providerList.stream()
-                .collect(
-                        Collectors.toMap(AuthenticationProvider::getProviderName, Function.identity()));
-    }
+  public AuthProviderFactory(List<AuthenticationProvider> providerList) {
+    // Mapea cada proveedor por su nombre (clave: nombre del proveedor, valor:
+    // instancia)
+    providers =
+        providerList.stream()
+            .collect(
+                Collectors.toMap(AuthenticationProvider::getProviderName, Function.identity()));
+  }
 
-    public AuthenticationProvider getProvider(String providerName) {
-        return providers.get(providerName);
-    }
+  public AuthenticationProvider getProvider(String providerName) {
+    return providers.get(providerName);
+  }
 }
