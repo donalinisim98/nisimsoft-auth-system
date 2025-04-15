@@ -12,7 +12,7 @@ import lombok.Data;
 public class User {
   @Id
   @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_gen")
-  @SequenceGenerator(name = "seq_gen", sequenceName = "ns_users_id_seq", allocationSize = 50)
+  @SequenceGenerator(name = "seq_gen", sequenceName = "ns_users_id_seq", allocationSize = 1)
   private Long id;
 
   @Size(min = 3, message = "El nombre debe tener al menos 3 caracteres")
