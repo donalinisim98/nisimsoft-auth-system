@@ -3,54 +3,53 @@ package com.nisimsoft.auth_system.datasource;
 import javax.sql.DataSource;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
 import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
 
 /**
- * DataSource dinámico basado en el corpId del contexto del hilo.
+ * Ruteador dinámico de DataSource por corpId (tenant).
  */
 public class TenantRoutingDataSource extends AbstractRoutingDataSource {
 
-    // Mapa de corpId → DataSource
     private final Map<Object, Object> targetDataSources = new ConcurrentHashMap<>();
-
-    // DataSource por defecto (base maestra donde está ns_corp)
     private final DataSource defaultDataSource;
+    private final TenantDataSourceProvider tenantDataSourceProvider;
 
-    public TenantRoutingDataSource(DataSource defaultDataSource) {
+    public TenantRoutingDataSource(DataSource defaultDataSource, TenantDataSourceProvider provider) {
         this.defaultDataSource = defaultDataSource;
+        this.tenantDataSourceProvider = provider;
         super.setDefaultTargetDataSource(defaultDataSource);
         super.setTargetDataSources(targetDataSources);
-        super.afterPropertiesSet(); // importante para inicializar
+        super.afterPropertiesSet();
     }
 
-    /**
-     * Devuelve el corpId actual del hilo para enrutar al DataSource adecuado.
-     */
     @Override
     protected Object determineCurrentLookupKey() {
-        return TenantContext.getTenant(); // e.g. "2"
+        String tenantId = TenantContext.getTenant();
+
+        if (tenantId != null && !targetDataSources.containsKey(tenantId)) {
+            try {
+                // Intenta cargar y registrar el DataSource dinámicamente
+                tenantDataSourceProvider.ensureTenantDataSource(tenantId);
+                DataSource tenantDs = (DataSource) tenantDataSourceProvider.getTenantDataSources().get(tenantId);
+                if (tenantDs != null) {
+                    this.addTenant(tenantId, tenantDs); // registra dinámicamente
+                }
+            } catch (Exception e) {
+                System.err.println("❌ No se pudo cargar DataSource para tenant " + tenantId + ": " + e.getMessage());
+                return null;
+            }
+        }
+
+        return tenantId;
     }
 
-    /**
-     * Verifica si ya se tiene cargado el DataSource para un tenant específico.
-     */
-    public boolean hasTenant(String tenantId) {
-        return targetDataSources.containsKey(tenantId);
-    }
-
-    /**
-     * Agrega un nuevo tenant con su DataSource.
-     */
     public void addTenant(String tenantId, DataSource dataSource) {
         targetDataSources.put(tenantId, dataSource);
-        // Reasignamos fuentes para que AbstractRoutingDataSource las reconozca
         super.setTargetDataSources(targetDataSources);
-        super.afterPropertiesSet(); // vuelve a inicializar internamente
+        super.afterPropertiesSet(); // actualiza internamente
     }
 
-    /**
-     * Devuelve el DataSource por defecto.
-     */
     public DataSource getDefaultDataSource() {
         return defaultDataSource;
     }

@@ -3,7 +3,7 @@ package com.nisimsoft.auth_system.datasource;
 import com.nisimsoft.auth_system.entities.Corporation;
 import com.nisimsoft.auth_system.entities.enums.NSCorpDBEngineEnum;
 import com.nisimsoft.auth_system.repositories.CorporationRepository;
-import jakarta.annotation.PostConstruct;
+// import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.stereotype.Component;
@@ -22,7 +22,7 @@ public class TenantDataSourceProvider {
 
     private final Map<Object, Object> tenantDataSources = new HashMap<>();
 
-    @PostConstruct
+    // @PostConstruct
     public void loadAllTenantDataSources() {
         corporationRepository.findAll().forEach(this::createAndRegisterDataSource);
     }
@@ -61,5 +61,15 @@ public class TenantDataSourceProvider {
             case MSSQL -> "com.microsoft.sqlserver.jdbc.SQLServerDriver";
             case ORACLE -> "oracle.jdbc.OracleDriver";
         };
+    }
+
+    public void ensureTenantDataSource(String corpId) {
+        if (tenantDataSources.containsKey(corpId))
+            return;
+
+        Corporation corp = corporationRepository.findById(Long.valueOf(corpId))
+                .orElseThrow(() -> new RuntimeException("Corporación no encontrada: " + corpId));
+
+        createAndRegisterDataSource(corp);
     }
 }

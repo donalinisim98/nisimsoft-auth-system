@@ -1,6 +1,7 @@
 package com.nisimsoft.auth_system.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nisimsoft.auth_system.datasource.TenantContext;
 import com.nisimsoft.auth_system.responses.ErrorResponse;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
@@ -11,6 +12,7 @@ import java.io.IOException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,6 +22,7 @@ import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 @Component
+@Order(1) // Asegúrate de que este filtro se ejecute antes que otros filtros de seguridad
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
 

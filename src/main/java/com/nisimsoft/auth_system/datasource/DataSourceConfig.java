@@ -47,7 +47,8 @@ public class DataSourceConfig {
     @Primary
     @Bean
     public DataSource dataSource() {
-        TenantRoutingDataSource routingDataSource = new TenantRoutingDataSource(defaultDataSource());
+        TenantRoutingDataSource routingDataSource = new TenantRoutingDataSource(defaultDataSource(),
+                tenantDataSourceProvider);
 
         Map<Object, Object> tenantSources = tenantDataSourceProvider.getTenantDataSources();
         tenantSources.forEach((key, ds) -> routingDataSource.addTenant((String) key, (DataSource) ds));
