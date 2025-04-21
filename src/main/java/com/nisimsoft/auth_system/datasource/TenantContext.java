@@ -1,4 +1,4 @@
-package com.nisimsoft.auth_system.config;
+package com.nisimsoft.auth_system.datasource;
 
 public class TenantContext {
     private static final ThreadLocal<String> currentTenant = new ThreadLocal<>();
