@@ -1,5 +1,6 @@
 package com.nisimsoft.auth_system.services;
 
+import com.nisimsoft.auth_system.dtos.requests.RegisterRequest;
 import com.nisimsoft.auth_system.entities.Corporation;
 import com.nisimsoft.auth_system.entities.User;
 import com.nisimsoft.auth_system.exceptions.auth.EmailAlreadyExistsException;
@@ -7,7 +8,7 @@ import com.nisimsoft.auth_system.repositories.CorporationRepository;
 import com.nisimsoft.auth_system.repositories.UserRepository;
 
 import java.util.HashSet;
-import java.util.Map;
+import java.util.List;
 import java.util.Set;
 
 import lombok.RequiredArgsConstructor;
@@ -22,36 +23,26 @@ public class AuthenticationService {
   private final PasswordEncoder passwordEncoder;
   private final CorporationRepository corporationRepository;
 
-  public User registerUser(Map<String, Object> userData) {
+  public User registerUser(RegisterRequest request) {
 
-    String email = (String) userData.get("email");
-    String name = (String) userData.get("name");
-    String username = (String) userData.get("username");
-    String password = (String) userData.get("password");
-    Object corporationIds = userData.get("corporationIds");
+    String email = request.getEmail();
 
     // Verificar si el email ya existe
     if (userRepository.findByEmail(email).isPresent()) {
       throw new EmailAlreadyExistsException("El email ya está registrado");
     }
 
-    // Crear y guardar el usuario
     User user = new User();
-    user.setName(name);
-    user.setUsername(username);
+    user.setName(request.getName());
+    user.setUsername(request.getUsername());
     user.setEmail(email);
-    user.setPassword(passwordEncoder.encode(password));
+    user.setPassword(passwordEncoder.encode(request.getPassword()));
 
-    // ✅ Verificar si el objeto es iterable (ej. List, Set, etc.)
-    if (corporationIds instanceof Iterable<?> ids) {
-      Set<Long> corpIds = new HashSet<>();
+    Set<Long> corpIds = request.getCorporationIds();
 
-      for (Object id : ids) {
-        corpIds.add(Long.valueOf(id.toString()));
-      }
-
-      // ✅ Obtener las entidades de la base
-      Set<Corporation> corporations = new HashSet<>(corporationRepository.findAllById(corpIds));
+    if (corpIds != null && !corpIds.isEmpty()) {
+      List<Corporation> corpList = corporationRepository.findAllById(corpIds);
+      Set<Corporation> corporations = new HashSet<>(corpList);
       user.setCorporations(corporations);
     }
 

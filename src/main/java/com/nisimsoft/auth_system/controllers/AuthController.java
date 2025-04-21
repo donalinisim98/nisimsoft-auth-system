@@ -5,6 +5,7 @@ import com.nisimsoft.auth_system.dtos.requests.LoginRequest;
 import com.nisimsoft.auth_system.dtos.requests.RegisterRequest;
 import com.nisimsoft.auth_system.dtos.responses.user.CorporationSummaryDTO;
 import com.nisimsoft.auth_system.dtos.responses.user.UserResponseDTO;
+import com.nisimsoft.auth_system.entities.Corporation;
 import com.nisimsoft.auth_system.entities.User;
 import com.nisimsoft.auth_system.exceptions.auth.AuthenticationFailedException;
 import com.nisimsoft.auth_system.responses.Response;
@@ -13,8 +14,11 @@ import com.nisimsoft.auth_system.services.AuthenticationService;
 import com.nisimsoft.auth_system.services.providers.AuthenticationProvider;
 import jakarta.validation.Valid;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -42,17 +46,15 @@ public class AuthController {
   @PostMapping("/register")
   public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
 
-    Map<String, Object> data = Map.of(
-        "name", request.getName(),
-        "username", request.getUsername(),
-        "email", request.getEmail(),
-        "password", request.getPassword(),
-        "corporationIds", request.getCorporationIds());
     // Registrar usuario
-    User user = authService.registerUser(data);
+    User user = authService.registerUser(request);
+
+    // IMPORTANTE: crea una copia segura del set (para evitar que JPA lo gestione al
+    // recorrer)
+    Set<Corporation> safeCorporations = new HashSet<>(user.getCorporations());
 
     // ✅ Convertir corporaciones a resumen DTO
-    List<CorporationSummaryDTO> corporationDTOs = user.getCorporations().stream()
+    List<CorporationSummaryDTO> corporationDTOs = safeCorporations.stream()
         .map(corp -> new CorporationSummaryDTO(corp.getId(), corp.getName()))
         .toList();
 

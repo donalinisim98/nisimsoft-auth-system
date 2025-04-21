@@ -9,15 +9,21 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 @Entity // Mapea la clase a una tabla SQL
 @Table(name = "ns_users") // Evita conflicto con "user"
-@Data // Genera getters, setters, equals, hashCode
+@Getter
+@Setter
+@ToString(exclude = "corporations")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class User {
   @Id
-  @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_gen")
-  @SequenceGenerator(name = "seq_gen", sequenceName = "ns_users_id_seq", allocationSize = 1)
+  @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_gen_user")
+  @SequenceGenerator(name = "seq_gen_user", sequenceName = "ns_users_id_seq", allocationSize = 10)
   private Long id;
 
   @Size(min = 3, message = "El nombre debe tener al menos 3 caracteres")
