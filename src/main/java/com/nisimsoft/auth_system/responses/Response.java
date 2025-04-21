@@ -6,7 +6,11 @@ import org.springframework.http.ResponseEntity;
 
 public class Response extends ResponseEntity<Object> {
 
-  public Response(String message, Map<String, Object> data, HttpStatus status) {
-    super(Map.of("message", message, "data", data), status);
+  public Response(String message, Object data, HttpStatus status) {
+    super(
+        Map.of(
+            "message", message,
+            "data", data),
+        status);
   }
 }

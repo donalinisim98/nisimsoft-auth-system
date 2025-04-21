@@ -1,4 +1,4 @@
-package com.nisimsoft.auth_system.dtos;
+package com.nisimsoft.auth_system.dtos.requests;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

@@ -1,5 +1,10 @@
 package com.nisimsoft.auth_system.entities;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -33,4 +38,9 @@ public class User {
   @NotBlank(message = "La contraseña es obligatoria")
   @Size(min = 8, message = "La contraseña debe tener al menos 8 caracteres")
   private String password;
+
+  @ManyToMany
+  @JoinTable(name = "ns_corp_users", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "corp_id"))
+  @JsonIgnoreProperties("users") // 🔁 Evita recursividad al serializar
+  private Set<Corporation> corporations = new HashSet<>();
 }
