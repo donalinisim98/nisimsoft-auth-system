@@ -23,12 +23,12 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
 
-  @Autowired private final JwtUtils jwtUtils;
+  @Autowired
+  private final JwtUtils jwtUtils;
 
   private static final AntPathMatcher pathMatcher = new AntPathMatcher();
 
-  private static final List<String> EXCLUDED_PATHS =
-      List.of("/api/login", "/api/register", "/api/public/**");
+  private static final List<String> EXCLUDED_PATHS = List.of("/api/login", "/api/register", "/api/public/**");
 
   @Override
   protected void doFilterInternal(
@@ -47,15 +47,19 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     try {
       String token = extractToken(request); // "Bearer <token>" → "<token>"
 
-      if (token != null && jwtUtils.extractEmail(token) != null) {
-        String email = jwtUtils.extractEmail(token); // Valida y extrae email
+      if (token != null) {
+        String email = jwtUtils.extractClaim(token, claims -> claims.get("email", String.class));
+        String corpId = jwtUtils.extractClaim(token, claims -> claims.get("corpId", String.class)); // 👈 EXTRA
 
-        // Crea un objeto de autenticación
-        UsernamePasswordAuthenticationToken authToken =
-            new UsernamePasswordAuthenticationToken(email, null, null);
-        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-        // Guarda en el contexto de seguridad
-        SecurityContextHolder.getContext().setAuthentication(authToken);
+        if (token != null && email != null) {
+          // ✅ Establecer el tenant en contexto (por hilo)
+          TenantContext.setTenant(corpId);
+          // Crea un objeto de autenticación
+          UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(email, null, null);
+          authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+          // Guarda en el contexto de seguridad
+          SecurityContextHolder.getContext().setAuthentication(authToken);
+        }
       }
 
       filterChain.doFilter(request, response); // Continúa la cadena de filtros
@@ -83,6 +87,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                           "Error de autenticación",
                           "Token inválido o no autorizado.",
                           request.getRequestURI())));
+    } finally {
+      TenantContext.clear();
     }
   }
 

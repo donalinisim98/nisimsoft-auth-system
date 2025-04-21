@@ -1,8 +1,8 @@
 package com.nisimsoft.auth_system.config;
 
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.impl.lang.Function;
 import io.jsonwebtoken.security.Keys;
 import java.security.Key;
 import java.time.Instant;
@@ -19,27 +19,26 @@ public class JwtUtils {
   @Value("${jwt.expiration-time}")
   private long expirationTime;
 
-  public String generateToken(String email) {
+  public String generateToken(String email, String corpId) {
     Key key = getSigningKey(); // Obtiene la clave HMAC desde .env
 
     return Jwts.builder()
         .subject(email) // Establece el email como "subject"
+        .claim("corpId", corpId) // 👈 nuevo claim
         .issuedAt(Date.from(Instant.now())) // Fecha de emisión
         .expiration(Date.from(Instant.now().plusMillis(expirationTime)))
         .signWith(key) // Firma el token con HMAC-SHA
         .compact(); // Convierte a String
   }
 
-  public String extractEmail(String token) {
+  public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
     SecretKey key = getSigningKey();
-
-    Jws<Claims> claimsJws =
-        Jwts.parser()
-            .verifyWith(key) // Usar SecretKey
-            .build()
-            .parseSignedClaims(token); // Parsea el token
-
-    return claimsJws.getPayload().getSubject(); // Extrae el email
+    Claims claims = Jwts.parser()
+        .verifyWith(key)
+        .build()
+        .parseSignedClaims(token)
+        .getPayload();
+    return claimsResolver.apply(claims);
   }
 
   private SecretKey getSigningKey() {

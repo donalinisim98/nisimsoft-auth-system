@@ -8,6 +8,7 @@ import com.nisimsoft.auth_system.dtos.responses.user.UserResponseDTO;
 import com.nisimsoft.auth_system.entities.Corporation;
 import com.nisimsoft.auth_system.entities.User;
 import com.nisimsoft.auth_system.exceptions.auth.AuthenticationFailedException;
+import com.nisimsoft.auth_system.repositories.CorporationRepository;
 import com.nisimsoft.auth_system.responses.Response;
 import com.nisimsoft.auth_system.services.AuthProviderFactory;
 import com.nisimsoft.auth_system.services.AuthenticationService;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api")
@@ -36,6 +38,9 @@ public class AuthController {
 
   @Autowired
   private AuthProviderFactory authProviderFactory;
+
+  @Autowired
+  private CorporationRepository corporationRepository;
 
   @Autowired
   private JwtUtils jwtUtils;
@@ -70,6 +75,10 @@ public class AuthController {
 
   @PostMapping("/login")
   public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
+
+    corporationRepository.findById(request.getCorpId())
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Corporación no encontrada"));
+
     AuthenticationProvider provider = authProviderFactory.getProvider(activeAuthProvider);
 
     if (provider == null) {
@@ -82,7 +91,7 @@ public class AuthController {
       throw new AuthenticationFailedException("Credenciales inválidas");
     }
 
-    String token = jwtUtils.generateToken(request.getEmail());
+    String token = jwtUtils.generateToken(request.getEmail(), request.getCorpId().toString());
 
     return new Response("Autenticación exitosa", Map.of("token", token), HttpStatus.OK);
   }
