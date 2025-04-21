@@ -8,7 +8,6 @@ import com.nisimsoft.auth_system.repositories.CorporationRepository;
 import com.nisimsoft.auth_system.repositories.UserRepository;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import lombok.RequiredArgsConstructor;
@@ -41,8 +40,8 @@ public class AuthenticationService {
     Set<Long> corpIds = request.getCorporationIds();
 
     if (corpIds != null && !corpIds.isEmpty()) {
-      List<Corporation> corpList = corporationRepository.findAllById(corpIds);
-      Set<Corporation> corporations = new HashSet<>(corpList);
+
+      Set<Corporation> corporations = new HashSet<>(corporationRepository.findAllById(corpIds));
       user.setCorporations(corporations);
     }
 

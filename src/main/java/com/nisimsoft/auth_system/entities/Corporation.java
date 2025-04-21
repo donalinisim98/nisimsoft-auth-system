@@ -31,6 +31,7 @@ import lombok.ToString;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Corporation {
     @Id
+    @EqualsAndHashCode.Include
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_gen_corp")
     @SequenceGenerator(name = "seq_gen_corp", sequenceName = "ns_corp_id_seq", allocationSize = 10)
     private Long id;
