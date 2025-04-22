@@ -3,10 +3,12 @@ package com.nisimsoft.auth_system.controllers;
 import com.nisimsoft.auth_system.config.JwtUtils;
 import com.nisimsoft.auth_system.dtos.requests.LoginRequest;
 import com.nisimsoft.auth_system.dtos.requests.RegisterRequest;
+import com.nisimsoft.auth_system.dtos.requests.SaveCorpRequest;
 import com.nisimsoft.auth_system.dtos.responses.user.CorporationSummaryDTO;
 import com.nisimsoft.auth_system.dtos.responses.user.UserResponseDTO;
 import com.nisimsoft.auth_system.entities.Corporation;
 import com.nisimsoft.auth_system.entities.User;
+import com.nisimsoft.auth_system.entities.enums.NSCorpDBEngineEnum;
 import com.nisimsoft.auth_system.exceptions.auth.AuthenticationFailedException;
 import com.nisimsoft.auth_system.repositories.CorporationRepository;
 import com.nisimsoft.auth_system.responses.Response;
@@ -47,6 +49,24 @@ public class AuthController {
 
   @Value("${app.auth.provider}")
   private String activeAuthProvider;
+
+  @PostMapping("/corporation")
+  public ResponseEntity<?> saveCorporation(@Valid @RequestBody SaveCorpRequest request) {
+
+    // Registrar usuario
+    Corporation corporation = new Corporation();
+
+    corporation.setDbEngine(NSCorpDBEngineEnum.valueOf(request.getDbEngine()));
+    corporation.setHost(request.getHost());
+    corporation.setUsername(request.getUsername());
+    corporation.setPassword(request.getPassword());
+    corporation.setName("Prueba");
+
+    corporationRepository.save(corporation);
+
+    return new Response(
+        "Prueba con corp realizada exitosamente", Map.of("test", "yes"), HttpStatus.CREATED);
+  }
 
   @PostMapping("/register")
   public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {

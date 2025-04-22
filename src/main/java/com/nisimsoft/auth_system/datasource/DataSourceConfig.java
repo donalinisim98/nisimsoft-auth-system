@@ -1,75 +1,39 @@
 package com.nisimsoft.auth_system.datasource;
 
-import jakarta.persistence.EntityManagerFactory;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
-import org.springframework.context.annotation.*;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import org.springframework.orm.jpa.*;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.annotation.EnableTransactionManagement;
-
 import javax.sql.DataSource;
-import java.util.Map;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 @Configuration
-@EnableTransactionManagement
 @RequiredArgsConstructor
 public class DataSourceConfig {
 
     private final TenantDataSourceProvider tenantDataSourceProvider;
 
-    @Value("${spring.datasource.url}")
-    private String dbUrl;
+    @Bean(name = "defaultDataSource")
+    public DataSource defaultDataSource(
+            @Value("${spring.datasource.url}") String url,
+            @Value("${spring.datasource.username}") String username,
+            @Value("${spring.datasource.password}") String password,
+            @Value("${spring.datasource.driver-class-name}") String driver) {
 
-    @Value("${spring.datasource.username}")
-    private String dbUser;
-
-    @Value("${spring.datasource.password}")
-    private String dbPassword;
-
-    @Value("${spring.datasource.driver-class-name}")
-    private String dbDriver;
-
-    // 🧩 Base de datos por defecto (donde está ns_corp)
-    @Bean
-    public DataSource defaultDataSource() {
-        DriverManagerDataSource dataSource = new DriverManagerDataSource();
-        dataSource.setDriverClassName(dbDriver);
-        dataSource.setUrl(dbUrl);
-        dataSource.setUsername(dbUser);
-        dataSource.setPassword(dbPassword);
-        return dataSource;
+        DriverManagerDataSource ds = new DriverManagerDataSource();
+        ds.setUrl(url);
+        ds.setUsername(username);
+        ds.setPassword(password);
+        ds.setDriverClassName(driver);
+        return ds;
     }
 
-    // 🧠 DataSource dinámico principal basado en corpId
     @Primary
     @Bean
-    public DataSource dataSource() {
-        TenantRoutingDataSource routingDataSource = new TenantRoutingDataSource(defaultDataSource(),
-                tenantDataSourceProvider);
-
-        Map<Object, Object> tenantSources = tenantDataSourceProvider.getTenantDataSources();
-        tenantSources.forEach((key, ds) -> routingDataSource.addTenant((String) key, (DataSource) ds));
-
-        return routingDataSource;
-    }
-
-    // 🧠 Configuración de JPA con el data source dinámico
-    @Bean
-    public LocalContainerEntityManagerFactoryBean entityManagerFactory(
-            DataSource dataSource, EntityManagerFactoryBuilder builder) {
-
-        return builder
-                .dataSource(dataSource)
-                .packages("com.nisimsoft.auth_system.entities") // <-- ajusta si tienes otro paquete
-                .persistenceUnit("tenant-pu")
-                .build();
-    }
-
-    @Bean
-    public PlatformTransactionManager transactionManager(EntityManagerFactory entityManagerFactory) {
-        return new JpaTransactionManager(entityManagerFactory);
+    public DataSource dataSource(
+            @Qualifier("defaultDataSource") DataSource defaultDataSource) {
+        return new TenantRoutingDataSource(defaultDataSource, tenantDataSourceProvider);
     }
 }

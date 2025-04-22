@@ -25,19 +25,29 @@ public class TenantRoutingDataSource extends AbstractRoutingDataSource {
 
     @Override
     protected Object determineCurrentLookupKey() {
-        String tenantId = TenantContext.getTenant();
+        final String tenantId = TenantContext.getTenant();
 
-        if (tenantId != null && !targetDataSources.containsKey(tenantId)) {
-            try {
-                // Intenta cargar y registrar el DataSource dinámicamente
-                tenantDataSourceProvider.ensureTenantDataSource(tenantId);
-                DataSource tenantDs = (DataSource) tenantDataSourceProvider.getTenantDataSources().get(tenantId);
-                if (tenantDs != null) {
-                    this.addTenant(tenantId, tenantDs); // registra dinámicamente
+        if (tenantId == null) {
+            System.err.println("⚠️  TenantContext no definido, usando base por defecto");
+            return null;
+        }
+
+        if (!targetDataSources.containsKey(tenantId)) {
+            synchronized (this) {
+                if (!targetDataSources.containsKey(tenantId)) {
+                    try {
+                        tenantDataSourceProvider.ensureTenantDataSource(tenantId);
+                        DataSource tenantDs = (DataSource) tenantDataSourceProvider.getTenantDataSources()
+                                .get(tenantId);
+                        if (tenantDs != null) {
+                            this.addTenant(tenantId, tenantDs); // registra dinámicamente
+                        }
+                    } catch (Exception e) {
+                        System.err.println(
+                                "❌ No se pudo cargar DataSource para tenant " + tenantId + ": " + e.getMessage());
+                        return null;
+                    }
                 }
-            } catch (Exception e) {
-                System.err.println("❌ No se pudo cargar DataSource para tenant " + tenantId + ": " + e.getMessage());
-                return null;
             }
         }
 

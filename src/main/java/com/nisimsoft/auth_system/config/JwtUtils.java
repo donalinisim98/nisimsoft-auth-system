@@ -24,7 +24,7 @@ public class JwtUtils {
 
     return Jwts.builder()
         .subject(email) // Establece el email como "subject"
-        .claim("corpId", corpId) // 👈 nuevo claim
+        .claim("corpId", corpId) // nuevo claim
         .issuedAt(Date.from(Instant.now())) // Fecha de emisión
         .expiration(Date.from(Instant.now().plusMillis(expirationTime)))
         .signWith(key) // Firma el token con HMAC-SHA

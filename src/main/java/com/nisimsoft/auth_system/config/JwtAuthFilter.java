@@ -3,6 +3,8 @@ package com.nisimsoft.auth_system.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nisimsoft.auth_system.datasource.TenantContext;
 import com.nisimsoft.auth_system.responses.ErrorResponse;
+
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -51,7 +53,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
       String token = extractToken(request); // "Bearer <token>" → "<token>"
 
       if (token != null) {
-        String email = jwtUtils.extractClaim(token, claims -> claims.get("email", String.class));
+        String email = jwtUtils.extractClaim(token, Claims::getSubject); // ✅ Obtiene el email desde el subject
+
         String corpId = jwtUtils.extractClaim(token, claims -> claims.get("corpId", String.class)); // 👈 EXTRA
 
         if (token != null && email != null) {
