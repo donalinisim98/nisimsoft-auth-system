@@ -58,8 +58,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         if (email != null && corpId != null && !corpId.isBlank()) {
           // ✅ Este print te ayudará a ver si llega correctamente
-          System.out.println("✅ Tenant seteado desde token: " + corpId);
-          TenantContext.setTenant(corpId);
+          // System.out.println("✅ Tenant seteado desde token: " + corpId);
+          // TenantContext.setTenant(corpId);
 
           UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(email, null, null);
           authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

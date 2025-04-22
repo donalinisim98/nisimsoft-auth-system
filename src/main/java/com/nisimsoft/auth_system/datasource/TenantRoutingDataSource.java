@@ -2,10 +2,11 @@ package com.nisimsoft.auth_system.datasource;
 
 import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
 
+import javax.sql.DataSource;
+
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
-import javax.sql.DataSource;
 
 public class TenantRoutingDataSource extends AbstractRoutingDataSource {
 
@@ -15,17 +16,15 @@ public class TenantRoutingDataSource extends AbstractRoutingDataSource {
     public TenantRoutingDataSource(DataSource defaultDataSource, TenantDataSourceProvider tenantDataSourceProvider) {
         this.tenantDataSourceProvider = tenantDataSourceProvider;
 
-        // Inicializamos el map con al menos el default
         tenantDataSources.put("default", defaultDataSource);
         super.setDefaultTargetDataSource(defaultDataSource);
-        super.setTargetDataSources(tenantDataSources); // <- evita el error
+        super.setTargetDataSources(tenantDataSources);
         super.afterPropertiesSet();
     }
 
     @Override
     protected Object determineCurrentLookupKey() {
         String tenantId = TenantContext.getTenant();
-
         if (tenantId == null) {
             System.out.println("⚠️ TenantContext no definido, usando base por defecto");
             return "default";
@@ -33,15 +32,26 @@ public class TenantRoutingDataSource extends AbstractRoutingDataSource {
 
         System.out.println("🔎 Lookup tenant: " + tenantId);
 
-        tenantDataSources.computeIfAbsent(tenantId, id -> {
+        // ✅ Si no existe, lo agregamos y forzamos reload
+        if (!tenantDataSources.containsKey(tenantId)) {
             try {
-                return tenantDataSourceProvider.loadDataSourceForTenant(tenantId);
+                DataSource ds = tenantDataSourceProvider.loadDataSourceForTenant(tenantId);
+                tenantDataSources.put(tenantId, ds);
+
+                // 🔁 Aquí está la CLAVE: forzamos la actualización interna
+                super.setTargetDataSources(new HashMap<>(tenantDataSources));
+                super.afterPropertiesSet();
             } catch (Exception e) {
                 System.err.println("❌ Error al cargar DataSource para tenant " + tenantId + ": " + e.getMessage());
-                return null;
+                return "default";
             }
-        });
+        }
 
         return tenantId;
+    }
+
+    // ✅ Este método público nos permite acceder al DataSource activo
+    public DataSource resolveCurrentDataSource() {
+        return (DataSource) super.determineTargetDataSource();
     }
 }

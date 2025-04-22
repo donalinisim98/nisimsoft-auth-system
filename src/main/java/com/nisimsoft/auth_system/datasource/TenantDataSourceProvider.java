@@ -26,7 +26,7 @@ public class TenantDataSourceProvider {
         return tenantDataSources.computeIfAbsent(tenantId, id -> {
             Corporation corp = fetchCorporationById(id);
             if (corp == null) {
-                throw new RuntimeException("Corporation no encontrada con ID: " + tenantId);
+                throw new RuntimeException("Corporación no encontrada con ID: " + tenantId);
             }
             return createDataSourceForCorporation(corp);
         });
