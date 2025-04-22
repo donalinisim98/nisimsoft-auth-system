@@ -24,8 +24,10 @@ import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -51,6 +53,7 @@ public class AuthController {
   private String activeAuthProvider;
 
   @PostMapping("/corporation")
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
   public ResponseEntity<?> saveCorporation(@Valid @RequestBody SaveCorpRequest request) {
 
     // Registrar usuario

@@ -60,6 +60,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         if (token != null && email != null) {
           // ✅ Establecer el tenant en contexto (por hilo)
           TenantContext.setTenant(corpId);
+          System.out.println("Tenant seteado en contexto: " + corpId);
           // Crea un objeto de autenticación
           UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(email, null, null);
           authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

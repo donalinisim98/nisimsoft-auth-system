@@ -4,6 +4,7 @@ import javax.sql.DataSource;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -16,6 +17,7 @@ public class DataSourceConfig {
     private final TenantDataSourceProvider tenantDataSourceProvider;
 
     @Bean(name = "defaultDataSource")
+    @ConfigurationProperties("spring.datasource")
     public DataSource defaultDataSource(
             @Value("${spring.datasource.url}") String url,
             @Value("${spring.datasource.username}") String username,
