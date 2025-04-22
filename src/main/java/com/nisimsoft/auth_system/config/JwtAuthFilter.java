@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,6 +24,7 @@ import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 @Component
+@Order(1) // Asegúrate de que este filtro se ejecute antes de otros filtros de seguridad
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
 
@@ -51,19 +53,19 @@ public class JwtAuthFilter extends OncePerRequestFilter {
       String token = extractToken(request); // "Bearer <token>" → "<token>"
 
       if (token != null) {
-        String email = jwtUtils.extractClaim(token, Claims::getSubject); // ✅ Obtiene el email desde el subject
+        String email = jwtUtils.extractClaim(token, Claims::getSubject);
+        String corpId = jwtUtils.extractClaim(token, claims -> claims.get("corpId", String.class));
 
-        String corpId = jwtUtils.extractClaim(token, claims -> claims.get("corpId", String.class)); // 👈 EXTRA
-
-        if (token != null && email != null) {
-          // ✅ Establecer el tenant en contexto (por hilo)
+        if (email != null && corpId != null && !corpId.isBlank()) {
+          // ✅ Este print te ayudará a ver si llega correctamente
+          System.out.println("✅ Tenant seteado desde token: " + corpId);
           TenantContext.setTenant(corpId);
-          System.out.println("Tenant seteado en contexto: " + corpId);
-          // Crea un objeto de autenticación
+
           UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(email, null, null);
           authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-          // Guarda en el contexto de seguridad
           SecurityContextHolder.getContext().setAuthentication(authToken);
+        } else {
+          System.out.println("⚠️ Token sin corpId válido. Se usará la base por defecto.");
         }
       }
 
@@ -92,8 +94,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                           "Error de autenticación",
                           "Token inválido o no autorizado.",
                           request.getRequestURI())));
-    } finally {
-      TenantContext.clear();
     }
   }
 

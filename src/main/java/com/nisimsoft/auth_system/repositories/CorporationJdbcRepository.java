@@ -13,11 +13,13 @@ import lombok.RequiredArgsConstructor;
 @Repository
 @RequiredArgsConstructor
 public class CorporationJdbcRepository {
-    @Qualifier("defaultDataSource")
-    private final DataSource defaultDataSource;
+    // 👇 asegúrate que Spring inyecta el datasource principal
+    // (TenantRoutingDataSource)
+    @Qualifier("dataSource")
+    private final DataSource dataSource;
 
     public void save(Corporation corp) {
-        JdbcTemplate jdbc = new JdbcTemplate(defaultDataSource);
+        JdbcTemplate jdbc = new JdbcTemplate(dataSource);
         jdbc.update(
                 "INSERT INTO ns_corp (id,db_engine, host, username, password, name) VALUES (NEXT VALUE FOR ns_corp_id_seq,?, ?, ?, ?, ?)",
                 corp.getDbEngine().name(),
