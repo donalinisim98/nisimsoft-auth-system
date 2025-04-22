@@ -10,6 +10,7 @@ import com.nisimsoft.auth_system.entities.Corporation;
 import com.nisimsoft.auth_system.entities.User;
 import com.nisimsoft.auth_system.entities.enums.NSCorpDBEngineEnum;
 import com.nisimsoft.auth_system.exceptions.auth.AuthenticationFailedException;
+import com.nisimsoft.auth_system.repositories.CorporationJdbcRepository;
 import com.nisimsoft.auth_system.repositories.CorporationRepository;
 import com.nisimsoft.auth_system.responses.Response;
 import com.nisimsoft.auth_system.services.AuthProviderFactory;
@@ -24,10 +25,8 @@ import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -44,6 +43,9 @@ public class AuthController {
   private AuthProviderFactory authProviderFactory;
 
   @Autowired
+  private CorporationJdbcRepository corporationJdbcRepository;
+
+  @Autowired
   private CorporationRepository corporationRepository;
 
   @Autowired
@@ -53,7 +55,6 @@ public class AuthController {
   private String activeAuthProvider;
 
   @PostMapping("/corporation")
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
   public ResponseEntity<?> saveCorporation(@Valid @RequestBody SaveCorpRequest request) {
 
     // Registrar usuario
@@ -65,7 +66,7 @@ public class AuthController {
     corporation.setPassword(request.getPassword());
     corporation.setName("Prueba");
 
-    corporationRepository.save(corporation);
+    corporationJdbcRepository.save(corporation);
 
     return new Response(
         "Prueba con corp realizada exitosamente", Map.of("test", "yes"), HttpStatus.CREATED);

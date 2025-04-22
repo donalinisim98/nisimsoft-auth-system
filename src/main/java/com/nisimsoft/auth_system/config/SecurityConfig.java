@@ -18,7 +18,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-  @Autowired private final JwtAuthFilter jwtAuthFilter;
+  @Autowired
+  private final JwtAuthFilter jwtAuthFilter;
 
   @Bean
   PasswordEncoder passwordEncoder() {
@@ -28,11 +29,10 @@ public class SecurityConfig {
   @Bean
   SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http.authorizeHttpRequests(
-            auth ->
-                auth.requestMatchers("/api/login", "/api/register")
-                    .permitAll()
-                    .anyRequest()
-                    .authenticated())
+        auth -> auth.requestMatchers("/api/login", "/api/register")
+            .permitAll()
+            .anyRequest()
+            .authenticated())
         .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
         .csrf(AbstractHttpConfigurer::disable)
         .sessionManagement(

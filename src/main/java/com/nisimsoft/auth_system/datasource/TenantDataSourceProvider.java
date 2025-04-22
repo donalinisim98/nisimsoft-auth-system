@@ -5,6 +5,7 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
+import org.hibernate.validator.internal.util.stereotypes.Lazy;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -16,28 +17,32 @@ import com.nisimsoft.auth_system.entities.enums.NSCorpDBEngineEnum;
 
 import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor
 @Component
+@RequiredArgsConstructor
 public class TenantDataSourceProvider {
 
     private final Map<Object, Object> tenantDataSources = new HashMap<>();
 
+    @Lazy
     private final ObjectProvider<DataSource> dataSourceProvider;
 
     public Map<Object, Object> getTenantDataSources() {
         return tenantDataSources;
     }
 
-    public void ensureTenantDataSource(String tenantId) {
-        if (!tenantDataSources.containsKey(tenantId)) {
-            Corporation corp = fetchCorporationById(tenantId);
-            if (corp != null) {
-                DataSource ds = createDataSourceForCorporation(corp);
-                tenantDataSources.put(tenantId, ds);
-            } else {
-                throw new RuntimeException("No existe una corporación con ID: " + tenantId);
-            }
+    public DataSource loadDataSourceForTenant(String tenantId) {
+        if (tenantDataSources.containsKey(tenantId)) {
+            return (DataSource) tenantDataSources.get(tenantId);
         }
+
+        Corporation corp = fetchCorporationById(tenantId);
+        if (corp == null) {
+            throw new RuntimeException("Corporation no encontrada");
+        }
+
+        DataSource newDataSource = createDataSourceForCorporation(corp);
+        tenantDataSources.put(tenantId, newDataSource);
+        return newDataSource;
     }
 
     private Corporation fetchCorporationById(String tenantId) {
