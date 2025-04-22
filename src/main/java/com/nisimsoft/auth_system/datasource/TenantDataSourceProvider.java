@@ -1,55 +1,44 @@
 package com.nisimsoft.auth_system.datasource;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.sql.DataSource;
-
-import org.hibernate.validator.internal.util.stereotypes.Lazy;
-import org.springframework.beans.factory.ObjectProvider;
+import com.nisimsoft.auth_system.entities.Corporation;
+import com.nisimsoft.auth_system.entities.enums.NSCorpDBEngineEnum;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.stereotype.Component;
 
-import com.nisimsoft.auth_system.entities.Corporation;
-import com.nisimsoft.auth_system.entities.enums.NSCorpDBEngineEnum;
-
-import lombok.RequiredArgsConstructor;
+import javax.sql.DataSource;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
-@RequiredArgsConstructor
 public class TenantDataSourceProvider {
 
-    private final Map<Object, Object> tenantDataSources = new HashMap<>();
+    private final DataSource defaultDataSource;
+    private final Map<String, DataSource> tenantDataSources = new ConcurrentHashMap<>();
 
-    @Lazy
-    private final ObjectProvider<DataSource> dataSourceProvider;
-
-    public Map<Object, Object> getTenantDataSources() {
-        return tenantDataSources;
+    public TenantDataSourceProvider(@Qualifier("defaultDataSource") DataSource defaultDataSource) {
+        this.defaultDataSource = defaultDataSource;
     }
 
     public DataSource loadDataSourceForTenant(String tenantId) {
-        if (tenantDataSources.containsKey(tenantId)) {
-            return (DataSource) tenantDataSources.get(tenantId);
-        }
-
-        Corporation corp = fetchCorporationById(tenantId);
-        if (corp == null) {
-            throw new RuntimeException("Corporation no encontrada");
-        }
-
-        DataSource newDataSource = createDataSourceForCorporation(corp);
-        tenantDataSources.put(tenantId, newDataSource);
-        return newDataSource;
+        return tenantDataSources.computeIfAbsent(tenantId, id -> {
+            Corporation corp = fetchCorporationById(id);
+            if (corp == null) {
+                throw new RuntimeException("Corporation no encontrada con ID: " + tenantId);
+            }
+            return createDataSourceForCorporation(corp);
+        });
     }
 
     private Corporation fetchCorporationById(String tenantId) {
-        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSourceProvider.getObject());
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(defaultDataSource);
         String sql = "SELECT * FROM ns_corp WHERE id = ?";
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(Corporation.class), tenantId)
-                .stream().findFirst().orElse(null);
+                .stream()
+                .findFirst()
+                .orElse(null);
     }
 
     private DataSource createDataSourceForCorporation(Corporation corp) {

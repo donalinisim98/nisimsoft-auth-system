@@ -19,7 +19,7 @@ public class CorporationJdbcRepository {
     public void save(Corporation corp) {
         JdbcTemplate jdbc = new JdbcTemplate(defaultDataSource);
         jdbc.update(
-                "INSERT INTO ns_corp (db_engine, host, username, password, name) VALUES (?, ?, ?, ?, ?)",
+                "INSERT INTO ns_corp (id,db_engine, host, username, password, name) VALUES (NEXT VALUE FOR ns_corp_id_seq,?, ?, ?, ?, ?)",
                 corp.getDbEngine().name(),
                 corp.getHost(),
                 corp.getUsername(),

@@ -1,8 +1,5 @@
 package com.nisimsoft.auth_system.datasource;
 
-import javax.sql.DataSource;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -10,14 +7,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
+import javax.sql.DataSource;
+
 @Configuration
-@RequiredArgsConstructor
 public class DataSourceConfig {
 
-    private final TenantDataSourceProvider tenantDataSourceProvider;
-
     @Bean(name = "defaultDataSource")
-    @ConfigurationProperties("spring.datasource")
+    @ConfigurationProperties(prefix = "spring.datasource")
     public DataSource defaultDataSource(
             @Value("${spring.datasource.url}") String url,
             @Value("${spring.datasource.username}") String username,
@@ -34,8 +30,7 @@ public class DataSourceConfig {
 
     @Primary
     @Bean
-    public DataSource dataSource(
-            @Qualifier("defaultDataSource") DataSource defaultDataSource) {
+    public DataSource dataSource(DataSource defaultDataSource, TenantDataSourceProvider tenantDataSourceProvider) {
         return new TenantRoutingDataSource(defaultDataSource, tenantDataSourceProvider);
     }
 }
