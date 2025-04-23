@@ -54,7 +54,8 @@ public class TenantDataSourceProvider {
         return switch (corp.getDbEngine()) {
             case MYSQL -> "jdbc:mysql://" + corp.getHost();
             case POSTGRESQL -> "jdbc:postgresql://" + corp.getHost();
-            case MSSQL -> "jdbc:sqlserver://" + corp.getHost();
+            case MSSQL -> "jdbc:sqlserver://" + corp.getHost()
+                    + ";databaseName=auth_db;encrypt=false;trustServerCertificate=true;";
             case ORACLE -> "jdbc:oracle:thin:@" + corp.getHost();
         };
     }

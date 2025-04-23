@@ -2,7 +2,6 @@ package com.nisimsoft.auth_system.repositories;
 
 import javax.sql.DataSource;
 
-import com.nisimsoft.auth_system.datasource.TenantContext;
 import com.nisimsoft.auth_system.datasource.TenantRoutingDataSource;
 import com.nisimsoft.auth_system.entities.Corporation;
 import lombok.RequiredArgsConstructor;
@@ -16,17 +15,29 @@ public class CorporationJdbcRepository {
     private final TenantRoutingDataSource routingDataSource;
 
     public void save(Corporation corp) {
-        String tenantId = TenantContext.getTenant();
-        System.out.println("🔍 Tenant en save(): " + tenantId);
 
-        JdbcTemplate jdbc = new JdbcTemplate(routingDataSource.resolveCurrentDataSource());
+        DataSource dataSource = routingDataSource.resolveCurrentDataSource();
+        JdbcTemplate jdbc = new JdbcTemplate(dataSource);
 
-        Long nextVal = jdbc.queryForObject("SELECT next_val FROM ns_corp_id_seq", Long.class);
-        Long newVal = nextVal + 1;
+        String dbProductName = "";
+        try {
+            dbProductName = dataSource.getConnection().getMetaData().getDatabaseProductName().toLowerCase();
+        } catch (Exception e) {
+            throw new RuntimeException("No se pudo determinar el motor de base de datos", e);
+        }
 
-        jdbc.update("UPDATE ns_corp_id_seq SET next_val = ?", newVal);
+        Long id;
 
-        Long id = newVal;
+        if (dbProductName.contains("mysql")) {
+            // ✅ Simulación de secuencia en MySQL
+            jdbc.update("UPDATE ns_corp_id_seq SET next_val = LAST_INSERT_ID(next_val + 1)");
+            id = jdbc.queryForObject("SELECT LAST_INSERT_ID()", Long.class);
+        } else if (dbProductName.contains("sql server")) {
+            // ✅ SQL Server usa la secuencia real
+            id = jdbc.queryForObject("SELECT NEXT VALUE FOR ns_corp_id_seq", Long.class);
+        } else {
+            throw new UnsupportedOperationException("Motor no soportado aún: " + dbProductName);
+        }
 
         jdbc.update(
                 "INSERT INTO ns_corp (id, db_engine, host, username, password, name) VALUES (?, ?, ?, ?, ?, ?)",

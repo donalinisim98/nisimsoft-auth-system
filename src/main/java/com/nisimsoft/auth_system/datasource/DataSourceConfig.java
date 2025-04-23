@@ -13,7 +13,7 @@ import javax.sql.DataSource;
 public class DataSourceConfig {
 
     @Bean(name = "defaultDataSource")
-    public DataSource defaultDataSource(
+    DataSource defaultDataSource(
             @Value("${spring.datasource.url}") String url,
             @Value("${spring.datasource.username}") String username,
             @Value("${spring.datasource.password}") String password,
@@ -29,7 +29,7 @@ public class DataSourceConfig {
 
     @Primary
     @Bean
-    public DataSource dataSource(
+    DataSource dataSource(
             @Qualifier("defaultDataSource") DataSource defaultDataSource,
             TenantDataSourceProvider provider) {
         return new TenantRoutingDataSource(defaultDataSource, provider);

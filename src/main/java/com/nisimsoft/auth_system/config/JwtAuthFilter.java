@@ -1,7 +1,6 @@
 package com.nisimsoft.auth_system.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nisimsoft.auth_system.datasource.TenantContext;
 import com.nisimsoft.auth_system.responses.ErrorResponse;
 
 import io.jsonwebtoken.Claims;
