@@ -2,15 +2,17 @@ package com.nisimsoft.auth_system.controllers;
 
 import com.nisimsoft.auth_system.config.JwtUtils;
 import com.nisimsoft.auth_system.dtos.requests.LoginRequest;
-import com.nisimsoft.auth_system.dtos.requests.RegisterRequest;
+import com.nisimsoft.auth_system.dtos.requests.RegisterUserRequest;
 import com.nisimsoft.auth_system.dtos.requests.SaveCorpRequest;
-import com.nisimsoft.auth_system.dtos.responses.user.CorporationSummaryDTO;
+import com.nisimsoft.auth_system.dtos.requests.SavePermissionRequest;
+import com.nisimsoft.auth_system.dtos.requests.UpdateCorpRequest;
+import com.nisimsoft.auth_system.dtos.responses.user.CorporationResponseDTO;
 import com.nisimsoft.auth_system.dtos.responses.user.UserResponseDTO;
 import com.nisimsoft.auth_system.entities.Corporation;
+import com.nisimsoft.auth_system.entities.Permission;
 import com.nisimsoft.auth_system.entities.User;
 import com.nisimsoft.auth_system.entities.enums.NSCorpDBEngineEnum;
 import com.nisimsoft.auth_system.exceptions.auth.AuthenticationFailedException;
-import com.nisimsoft.auth_system.repositories.CorporationJdbcRepository;
 import com.nisimsoft.auth_system.repositories.CorporationRepository;
 import com.nisimsoft.auth_system.responses.Response;
 import com.nisimsoft.auth_system.services.AuthProviderFactory;
@@ -28,6 +30,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -43,9 +46,6 @@ public class AuthController {
   private AuthProviderFactory authProviderFactory;
 
   @Autowired
-  private CorporationJdbcRepository corporationJdbcRepository;
-
-  @Autowired
   private CorporationRepository corporationRepository;
 
   @Autowired
@@ -57,23 +57,45 @@ public class AuthController {
   @PostMapping("/corporation")
   public ResponseEntity<?> saveCorporation(@Valid @RequestBody SaveCorpRequest request) {
 
-    // Registrar usuario
     Corporation corporation = new Corporation();
 
     corporation.setDbEngine(NSCorpDBEngineEnum.valueOf(request.getDbEngine()));
+    corporation.setDbName(request.getDbName());
     corporation.setHost(request.getHost());
+    corporation.setName(request.getName());
     corporation.setUsername(request.getUsername());
     corporation.setPassword(request.getPassword());
-    corporation.setName("Prueba");
 
-    corporationJdbcRepository.save(corporation);
+    corporationRepository.save(corporation);
+    CorporationResponseDTO responseDTO = new CorporationResponseDTO(corporation.getId(), corporation.getName());
 
     return new Response(
-        "Prueba con corp realizada exitosamente", Map.of("test", "yes"), HttpStatus.CREATED);
+        "Corporación guardada realizada exitosamente", responseDTO, HttpStatus.CREATED);
+  }
+
+  @PutMapping("/corporation")
+  public ResponseEntity<?> updateCorporation(@Valid @RequestBody UpdateCorpRequest request) {
+
+    Corporation corporation = corporationRepository.findById(request.getId())
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Corporación no encontrada"));
+
+    corporation.setDbEngine(NSCorpDBEngineEnum.valueOf(request.getDbEngine()));
+    corporation.setDbName(request.getDbName());
+    corporation.setHost(request.getHost());
+    corporation.setName(request.getName());
+    corporation.setUsername(request.getUsername());
+    corporation.setPassword(request.getPassword());
+
+    corporationRepository.save(corporation);
+
+    CorporationResponseDTO responseDTO = new CorporationResponseDTO(request.getId(), corporation.getName());
+
+    return new Response(
+        "Corporación actualizada realizada exitosamente", responseDTO, HttpStatus.OK);
   }
 
   @PostMapping("/register")
-  public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
+  public ResponseEntity<?> register(@Valid @RequestBody RegisterUserRequest request) {
 
     // Registrar usuario
     User user = authService.registerUser(request);
@@ -83,8 +105,8 @@ public class AuthController {
     Set<Corporation> safeCorporations = new HashSet<>(user.getCorporations());
 
     // ✅ Convertir corporaciones a resumen DTO
-    List<CorporationSummaryDTO> corporationDTOs = safeCorporations.stream()
-        .map(corp -> new CorporationSummaryDTO(corp.getId(), corp.getName()))
+    List<CorporationResponseDTO> corporationDTOs = safeCorporations.stream()
+        .map(corp -> new CorporationResponseDTO(corp.getId(), corp.getName()))
         .toList();
 
     UserResponseDTO responseDTO = new UserResponseDTO(
@@ -118,5 +140,15 @@ public class AuthController {
     String token = jwtUtils.generateToken(request.getEmail(), request.getCorpId().toString());
 
     return new Response("Autenticación exitosa", Map.of("token", token), HttpStatus.OK);
+  }
+
+  @PostMapping("/permission")
+  public ResponseEntity<?> savePermission(@Valid @RequestBody SavePermissionRequest request) {
+
+    // Registrar permiso
+    Permission permission = authService.savePermission(request);
+
+    return new Response(
+        "Permiso guardado exitosamente", Map.of("permission", permission), HttpStatus.CREATED);
   }
 }

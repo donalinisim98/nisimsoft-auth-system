@@ -15,7 +15,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Size;
 import lombok.EqualsAndHashCode;
@@ -32,13 +31,15 @@ import lombok.ToString;
 public class Corporation {
     @Id
     @EqualsAndHashCode.Include
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_gen_corp")
-    @SequenceGenerator(name = "seq_gen_corp", sequenceName = "ns_corp_id_seq", allocationSize = 10)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column
     @Size(min = 3, message = "El nombre debe tener al menos 3 caracteres")
     private String name;
+
+    @Column
+    private String dbName;
 
     @Column
     private String username;
@@ -49,7 +50,6 @@ public class Corporation {
     @Column(nullable = true)
     private String logo;
 
-    @Column(unique = true)
     private String host;
 
     @Column

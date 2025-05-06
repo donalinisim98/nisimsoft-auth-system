@@ -25,9 +25,11 @@ public class TenantDataSourceProvider {
     public DataSource loadDataSourceForTenant(String tenantId) {
         return tenantDataSources.computeIfAbsent(tenantId, id -> {
             Corporation corp = fetchCorporationById(id);
+
             if (corp == null) {
                 throw new RuntimeException("Corporación no encontrada con ID: " + tenantId);
             }
+
             return createDataSourceForCorporation(corp);
         });
     }
@@ -54,8 +56,8 @@ public class TenantDataSourceProvider {
         return switch (corp.getDbEngine()) {
             case MYSQL -> "jdbc:mysql://" + corp.getHost();
             case POSTGRESQL -> "jdbc:postgresql://" + corp.getHost();
-            case MSSQL -> "jdbc:sqlserver://" + corp.getHost()
-                    + ";databaseName=auth_db;encrypt=false;trustServerCertificate=true;";
+            case MSSQL -> "jdbc:sqlserver://" + corp.getHost() + ";databaseName=" + corp.getDbName()
+                    + ";encrypt=false;trustServerCertificate=true";
             case ORACLE -> "jdbc:oracle:thin:@" + corp.getHost();
         };
     }

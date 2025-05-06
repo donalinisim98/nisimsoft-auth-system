@@ -1,10 +1,13 @@
 package com.nisimsoft.auth_system.services;
 
-import com.nisimsoft.auth_system.dtos.requests.RegisterRequest;
+import com.nisimsoft.auth_system.dtos.requests.RegisterUserRequest;
+import com.nisimsoft.auth_system.dtos.requests.SavePermissionRequest;
 import com.nisimsoft.auth_system.entities.Corporation;
+import com.nisimsoft.auth_system.entities.Permission;
 import com.nisimsoft.auth_system.entities.User;
 import com.nisimsoft.auth_system.exceptions.auth.EmailAlreadyExistsException;
 import com.nisimsoft.auth_system.repositories.CorporationRepository;
+import com.nisimsoft.auth_system.repositories.PermissionRepository;
 import com.nisimsoft.auth_system.repositories.UserRepository;
 
 import java.util.HashSet;
@@ -19,10 +22,11 @@ import org.springframework.stereotype.Service;
 public class AuthenticationService {
 
   private final UserRepository userRepository;
+  private final PermissionRepository permissionRepository;
   private final PasswordEncoder passwordEncoder;
   private final CorporationRepository corporationRepository;
 
-  public User registerUser(RegisterRequest request) {
+  public User registerUser(RegisterUserRequest request) {
 
     String email = request.getEmail();
 
@@ -46,5 +50,15 @@ public class AuthenticationService {
     }
 
     return userRepository.save(user);
+  }
+
+  public Permission savePermission(SavePermissionRequest request) {
+
+    Permission permission = new Permission();
+    permission.setName(request.getName());
+    permission.setType(request.getType());
+    permission.setValue(request.getValue());
+
+    return permissionRepository.save(permission);
   }
 }

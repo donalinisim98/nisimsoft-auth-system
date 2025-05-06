@@ -1,6 +1,7 @@
-package com.nisimsoft.auth_system.config;
+package com.nisimsoft.auth_system.filters;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nisimsoft.auth_system.config.JwtUtils;
 import com.nisimsoft.auth_system.responses.ErrorResponse;
 
 import io.jsonwebtoken.Claims;
@@ -32,7 +33,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
   private static final AntPathMatcher pathMatcher = new AntPathMatcher();
 
-  private static final List<String> EXCLUDED_PATHS = List.of("/api/login", "/api/register", "/api/public/**");
+  private static final List<String> EXCLUDED_PATHS = List.of("/api/login", "/api/public/**");
 
   @Override
   protected void doFilterInternal(

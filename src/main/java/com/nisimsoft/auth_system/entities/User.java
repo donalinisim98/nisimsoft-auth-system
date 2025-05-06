@@ -22,8 +22,7 @@ import lombok.ToString;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class User {
   @Id
-  @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_gen_user")
-  @SequenceGenerator(name = "seq_gen_user", sequenceName = "ns_users_id_seq", allocationSize = 10)
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
   @Size(min = 3, message = "El nombre debe tener al menos 3 caracteres")

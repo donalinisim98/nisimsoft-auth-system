@@ -26,11 +26,11 @@ public class TenantRoutingDataSource extends AbstractRoutingDataSource {
     protected Object determineCurrentLookupKey() {
         String tenantId = TenantContext.getTenant();
         if (tenantId == null) {
-            System.out.println("⚠️ TenantContext no definido, usando base por defecto");
+            System.out.println("TenantContext no definido, usando base por defecto");
             return "default";
         }
 
-        System.out.println("🔎 Lookup tenant: " + tenantId);
+        System.out.println("Lookup tenant: " + tenantId);
 
         // ✅ Si no existe, lo agregamos y forzamos reload
         if (!tenantDataSources.containsKey(tenantId)) {

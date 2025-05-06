@@ -13,6 +13,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.nisimsoft.auth_system.filters.JwtAuthFilter;
+
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -29,7 +31,7 @@ public class SecurityConfig {
   @Bean
   SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http.authorizeHttpRequests(
-        auth -> auth.requestMatchers("/api/login", "/api/register")
+        auth -> auth.requestMatchers("/api/login")
             .permitAll()
             .anyRequest()
             .authenticated())

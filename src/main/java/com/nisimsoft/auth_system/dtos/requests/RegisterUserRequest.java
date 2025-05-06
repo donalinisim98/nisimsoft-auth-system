@@ -14,7 +14,7 @@ import lombok.Data;
 // Constructor, getters y setters generados por Lombok
 // No es necesario escribirlos manualmente debido a la anotación @Data
 @Data
-public class RegisterRequest {
+public class RegisterUserRequest {
 
   @NotBlank(message = "El nombre es obligatorio")
   @Size(min = 3, message = "El nombre debe tener al menos 3 caracteres")
