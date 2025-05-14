@@ -6,6 +6,7 @@ import com.nisimsoft.auth_system.dtos.requests.RegisterUserRequest;
 import com.nisimsoft.auth_system.dtos.requests.SaveCorpRequest;
 import com.nisimsoft.auth_system.dtos.requests.SavePermissionRequest;
 import com.nisimsoft.auth_system.dtos.requests.UpdateCorpRequest;
+import com.nisimsoft.auth_system.dtos.requests.VerifyUserRequest;
 import com.nisimsoft.auth_system.dtos.responses.user.CorporationResponseDTO;
 import com.nisimsoft.auth_system.dtos.responses.user.UserResponseDTO;
 import com.nisimsoft.auth_system.entities.Corporation;
@@ -14,6 +15,7 @@ import com.nisimsoft.auth_system.entities.User;
 import com.nisimsoft.auth_system.entities.enums.NSCorpDBEngineEnum;
 import com.nisimsoft.auth_system.exceptions.auth.AuthenticationFailedException;
 import com.nisimsoft.auth_system.repositories.CorporationRepository;
+import com.nisimsoft.auth_system.repositories.UserRepository;
 import com.nisimsoft.auth_system.responses.Response;
 import com.nisimsoft.auth_system.services.AuthProviderFactory;
 import com.nisimsoft.auth_system.services.AuthenticationService;
@@ -47,6 +49,9 @@ public class AuthController {
 
   @Autowired
   private CorporationRepository corporationRepository;
+
+  @Autowired
+  private UserRepository userRepository;
 
   @Autowired
   private JwtUtils jwtUtils;
@@ -104,12 +109,13 @@ public class AuthController {
     // recorrer)
     Set<Corporation> safeCorporations = new HashSet<>(user.getCorporations());
 
-    // ✅ Convertir corporaciones a resumen DTO
+    // Convertir corporaciones a resumen DTO
     List<CorporationResponseDTO> corporationDTOs = safeCorporations.stream()
         .map(corp -> new CorporationResponseDTO(corp.getId(), corp.getName()))
         .toList();
 
     UserResponseDTO responseDTO = new UserResponseDTO(
+        user.getId(),
         user.getName(),
         user.getUsername(),
         user.getEmail(),
@@ -119,25 +125,36 @@ public class AuthController {
         "Usuario registrado exitosamente", responseDTO, HttpStatus.CREATED);
   }
 
+  @PostMapping("/verify-user")
+  public ResponseEntity<?> verifyUser(@Valid @RequestBody VerifyUserRequest request) {
+    AuthenticationProvider provider = getAuthenticationProvider();
+
+    User user = getUserByEmailOrThrow(request.getEmail());
+
+    authenticateOrThrow(provider, request.getEmail(), request.getPassword());
+
+    Set<Corporation> safeCorporations = new HashSet<>(user.getCorporations());
+    List<CorporationResponseDTO> corporationDTOs = mapCorporations(safeCorporations);
+
+    UserResponseDTO responseDTO = new UserResponseDTO(
+        user.getId(),
+        user.getName(),
+        user.getUsername(),
+        user.getEmail(),
+        corporationDTOs);
+
+    return new Response("Usuario encontrado exitosamente", responseDTO, HttpStatus.OK);
+  }
+
   @PostMapping("/login")
   public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
+    AuthenticationProvider provider = getAuthenticationProvider();
 
-    corporationRepository.findById(request.getCorpId())
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Corporación no encontrada"));
+    User user = getUserByIdOrThrow(request.getUserId());
+    validateUserBelongsToCorporation(user, request.getCorpId());
+    authenticateOrThrow(provider, user.getEmail(), request.getPassword());
 
-    AuthenticationProvider provider = authProviderFactory.getProvider(activeAuthProvider);
-
-    if (provider == null) {
-      throw new AuthenticationFailedException("Proveedor de autenticación no configurado");
-    }
-
-    boolean isAuthenticated = provider.authenticate(request.getEmail(), request.getPassword());
-
-    if (!isAuthenticated) {
-      throw new AuthenticationFailedException("Credenciales inválidas");
-    }
-
-    String token = jwtUtils.generateToken(request.getEmail(), request.getCorpId().toString());
+    String token = jwtUtils.generateToken(user.getEmail(), request.getCorpId().toString());
 
     return new Response("Autenticación exitosa", Map.of("token", token), HttpStatus.OK);
   }
@@ -150,5 +167,44 @@ public class AuthController {
 
     return new Response(
         "Permiso guardado exitosamente", Map.of("permission", permission), HttpStatus.CREATED);
+  }
+
+  private AuthenticationProvider getAuthenticationProvider() {
+    AuthenticationProvider provider = authProviderFactory.getProvider(activeAuthProvider);
+    if (provider == null) {
+      throw new AuthenticationFailedException("Proveedor de autenticación no configurado");
+    }
+    return provider;
+  }
+
+  private User getUserByEmailOrThrow(String email) {
+    return userRepository.findByEmail(email)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+  }
+
+  private User getUserByIdOrThrow(Long id) {
+    return userRepository.findById(id)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+  }
+
+  private void authenticateOrThrow(AuthenticationProvider provider, String email, String password) {
+    if (!provider.authenticate(email, password)) {
+      throw new AuthenticationFailedException("Credenciales inválidas");
+    }
+  }
+
+  private void validateUserBelongsToCorporation(User user, Long corpId) {
+    boolean belongs = user.getCorporations()
+        .stream()
+        .anyMatch(c -> c.getId().equals(corpId));
+    if (!belongs) {
+      throw new AuthenticationFailedException("El usuario no pertenece a la corporación");
+    }
+  }
+
+  private List<CorporationResponseDTO> mapCorporations(Set<Corporation> corporations) {
+    return corporations.stream()
+        .map(corp -> new CorporationResponseDTO(corp.getId(), corp.getName()))
+        .toList();
   }
 }

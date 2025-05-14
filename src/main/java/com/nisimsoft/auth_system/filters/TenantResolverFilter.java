@@ -25,7 +25,7 @@ public class TenantResolverFilter extends OncePerRequestFilter {
     private static final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     private static final List<String> EXCLUDED_PATHS = List.of(
-            "/api/login", "/api/public/**");
+            "/api/login", "/api/public/**", "/api/verify-user");
 
     @Override
     protected void doFilterInternal(

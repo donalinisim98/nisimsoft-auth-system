@@ -46,6 +46,6 @@ public class User {
 
   @ManyToMany
   @JoinTable(name = "ns_corp_users", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "corp_id"))
-  @JsonIgnoreProperties("users") // 🔁 Evita recursividad al serializar
+  @JsonIgnoreProperties("users") // Evita recursividad al serializar
   private Set<Corporation> corporations = new HashSet<>();
 }

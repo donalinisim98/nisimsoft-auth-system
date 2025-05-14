@@ -1,4 +1,4 @@
-package com.nisimsoft.auth_system.datasource;
+package com.nisimsoft.auth_system.config;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -6,6 +6,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
+
+import com.nisimsoft.auth_system.datasource.TenantDataSourceProvider;
+import com.nisimsoft.auth_system.datasource.TenantRoutingDataSource;
 
 import javax.sql.DataSource;
 
