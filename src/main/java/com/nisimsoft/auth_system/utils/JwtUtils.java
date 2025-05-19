@@ -1,4 +1,4 @@
-package com.nisimsoft.auth_system.config;
+package com.nisimsoft.auth_system.utils;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
