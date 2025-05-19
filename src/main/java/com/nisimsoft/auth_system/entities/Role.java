@@ -26,11 +26,12 @@ import lombok.ToString;
 @Table(name = "ns_roles")
 @Getter
 @Setter
-@ToString
+@ToString(onlyExplicitlyIncluded = true)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
 
     @Column(unique = true)
@@ -45,7 +46,6 @@ public class Role {
 
     @ManyToMany(mappedBy = "roles", fetch = FetchType.LAZY)
     @JsonIgnore
-    @ToString.Exclude
     private Set<User> users = new HashSet<>();
 
     @ManyToMany

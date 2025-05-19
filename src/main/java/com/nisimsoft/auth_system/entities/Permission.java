@@ -31,6 +31,7 @@ import lombok.ToString;
 public class Permission {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
 
     @Size(min = 3, message = "El nombre debe tener al menos 3 caracteres")

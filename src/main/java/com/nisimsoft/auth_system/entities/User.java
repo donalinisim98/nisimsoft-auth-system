@@ -18,11 +18,12 @@ import lombok.ToString;
 @Table(name = "ns_users") // Evita conflicto con "user"
 @Getter
 @Setter
-@ToString(exclude = "corporations")
+@ToString(onlyExplicitlyIncluded = true) // Evita recursividad al serializar
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class User {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @EqualsAndHashCode.Include
   private Long id;
 
   @Size(min = 3, message = "El nombre debe tener al menos 3 caracteres")
