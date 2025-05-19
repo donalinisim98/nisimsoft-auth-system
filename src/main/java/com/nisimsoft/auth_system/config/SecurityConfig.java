@@ -14,6 +14,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.nisimsoft.auth_system.filters.JwtAuthFilter;
+import com.nisimsoft.auth_system.utils.GeneralUtils;
 
 @Configuration
 @EnableWebSecurity
@@ -31,7 +32,7 @@ public class SecurityConfig {
   @Bean
   SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http.authorizeHttpRequests(
-        auth -> auth.requestMatchers("/api/login", "/api/verify-user")
+        auth -> auth.requestMatchers(GeneralUtils.EXCLUDED_PATHS)
             .permitAll()
             .anyRequest()
             .authenticated())

@@ -9,8 +9,10 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
-import com.nisimsoft.auth_system.config.JwtUtils;
+
 import com.nisimsoft.auth_system.datasource.TenantContext;
+import com.nisimsoft.auth_system.utils.GeneralUtils;
+import com.nisimsoft.auth_system.utils.JwtUtils;
 
 import java.io.IOException;
 import java.util.List;
@@ -25,7 +27,7 @@ public class TenantResolverFilter extends OncePerRequestFilter {
     private static final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     private static final List<String> EXCLUDED_PATHS = List.of(
-            "/api/login", "/api/public/**", "/api/verify-user");
+            GeneralUtils.EXCLUDED_PATHS);
 
     @Override
     protected void doFilterInternal(

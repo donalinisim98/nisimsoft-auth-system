@@ -1,8 +1,9 @@
 package com.nisimsoft.auth_system.filters;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nisimsoft.auth_system.config.JwtUtils;
 import com.nisimsoft.auth_system.responses.ErrorResponse;
+import com.nisimsoft.auth_system.utils.GeneralUtils;
+import com.nisimsoft.auth_system.utils.JwtUtils;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -33,7 +34,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
   private static final AntPathMatcher pathMatcher = new AntPathMatcher();
 
-  private static final List<String> EXCLUDED_PATHS = List.of("/api/login", "/api/public/**", "/api/verify-user");
+  private static final List<String> EXCLUDED_PATHS = List.of(GeneralUtils.EXCLUDED_PATHS);
 
   @Override
   protected void doFilterInternal(
